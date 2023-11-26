@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS Recheios (
 -- Tabela Tamanhos
 CREATE TABLE IF NOT EXISTS Tamanhos (
     tamanho_id INT PRIMARY KEY AUTO_INCREMENT,
-    nome_tamanho VARCHAR(50)
+    nome_tamanho VARCHAR(50),
+    tipo VARCHAR(10) -- P, M, G para pasteis; 300ml, 500ml, 1L para bebidas
 );
 
 -- Tabela Categorias
@@ -63,6 +64,15 @@ CREATE TABLE IF NOT EXISTS Pasteis_Recheios (
     FOREIGN KEY (recheio_id) REFERENCES Recheios(recheio_id)
 );
 
+-- Tabela Bebidas
+CREATE TABLE IF NOT EXISTS Bebidas (
+    bebida_id INT PRIMARY KEY AUTO_INCREMENT,
+    nome_bebida VARCHAR(100),
+    preco DECIMAL(10, 2),
+    tamanho_id INT,
+    FOREIGN KEY (tamanho_id) REFERENCES Tamanhos(tamanho_id)
+);
+
 -- Tabela Pedidos
 CREATE TABLE IF NOT EXISTS Pedidos (
     pedido_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -82,4 +92,14 @@ CREATE TABLE IF NOT EXISTS Detalhes_Pedido (
     quantidade INT,
     FOREIGN KEY (pedido_id) REFERENCES Pedidos(pedido_id),
     FOREIGN KEY (pastel_id) REFERENCES Pasteis(pastel_id)
+);
+
+-- Tabela Detalhes_Pedido_Bebida (Relação many-to-many)
+CREATE TABLE IF NOT EXISTS Detalhes_Pedido_Bebida (
+    detalhe_bebida_id INT PRIMARY KEY AUTO_INCREMENT,
+    pedido_id INT,
+    bebida_id INT,
+    quantidade INT,
+    FOREIGN KEY (pedido_id) REFERENCES Pedidos(pedido_id),
+    FOREIGN KEY (bebida_id) REFERENCES Bebidas(bebida_id)
 );
