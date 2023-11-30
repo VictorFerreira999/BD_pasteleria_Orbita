@@ -328,4 +328,54 @@ END //
 
 DELIMITER ;
 
+DELIMITER //
+
+CREATE FUNCTION ObterNomeCliente(cliente_id INT) RETURNS VARCHAR(100) DETERMINISTIC
+BEGIN
+    DECLARE nome_cliente VARCHAR(100);
+    
+    SELECT nome_completo INTO nome_cliente
+    FROM Clientes
+    WHERE cliente_id = cliente_id;
+    
+    RETURN nome_cliente;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE FUNCTION CalcularIdadeCliente(cliente_id INT) RETURNS INT DETERMINISTIC
+BEGIN
+    DECLARE idade_cliente INT;
+    
+    SELECT YEAR(CURDATE()) - YEAR(data_nascimento) - 
+           (RIGHT(CURDATE(), 5) < RIGHT(data_nascimento, 5)) INTO idade_cliente
+    FROM Clientes
+    WHERE cliente_id = cliente_id;
+    
+    RETURN idade_cliente;
+END //
+
+DELIMITER ;
+
+-- Função para calcular o preço total de compras de um cliente
+DELIMITER //
+
+CREATE FUNCTION CalcularPrecoTotalCliente(cliente_id INT) RETURNS DECIMAL(10, 2) DETERMINISTIC
+BEGIN
+    DECLARE total DECIMAL(10, 2);
+
+    SELECT COALESCE(SUM(P.preco * DP.quantidade), 0.00)
+    INTO total
+    FROM Detalhes_Pedido DP
+    JOIN Pasteis P ON DP.pastel_id = P.pastel_id
+    JOIN Pedidos PE ON DP.pedido_id = PE.pedido_id
+    WHERE PE.cliente_id = cliente_id;
+
+    RETURN total;
+END //
+
+DELIMITER ;
+
 
