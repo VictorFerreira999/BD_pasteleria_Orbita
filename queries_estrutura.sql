@@ -147,5 +147,38 @@ VALUES
     ('Água 500ml', 5.00, 5),
     ('Água 1L', 7.00, 6);
     
+-- pedidos
+
+INSERT INTO Clientes (nome_completo, nome_preferido, cpf, data_nascimento, telefone, email, bairro, cidade, estado)
+VALUES
+    ('João Silva', 'João', '123.456.789-01', '1990-05-15', '(11) 98765-4321', 'joao@gmail.com', 'Centro', 'São Paulo', 'SP'),
+    ('Maria Oliveira', 'Maria', '987.654.321-02', '1985-08-20', '(11) 87654-3210', 'maria@gmail.com', 'Bela Vista', 'São Paulo', 'SP'),
+    ('Carlos Souza', 'Carlos', '234.567.890-03', '1995-02-10', '(11) 76543-2109', 'carlos@gmail.com', 'Pinheiros', 'São Paulo', 'SP');
+
+INSERT INTO Pasteis (nome_pastel, preco, tamanho_id, categoria_id)
+VALUES
+    ('Pastel de Carne', 5.00, 1, 1),
+    ('Pastel de Queijo', 4.50, 2, 1),
+    ('Pastel de Frango', 5.50, 2, 1),
+    ('Pastel Vegano de Abobrinha', 6.00, 1, 4);
+
+INSERT INTO Bebidas (nome_bebida, preco, tamanho_id)
+VALUES
+    ('Refrigerante 300ml', 3.00, 1),
+    ('Suco de Laranja 500ml', 5.00, 2),
+    ('Água 1L', 4.00, 3);
+
+CALL FazerPedido(1, '2023-11-30', 'Cartão de Crédito', 1, 1, 1);
+CALL FazerPedido(1, '2023-11-29', 'Dinheiro', 1, 2, 2);
+
+CALL FazerPedido(2, '2023-11-28', 'Cartão de Débito', 1, 2, 1);
+
+CALL FazerPedido(3, '2023-11-27', 'Dinheiro', 4, 4, 1);
+
+CALL ObterDetalhesPedido(1);
+CALL ObterDetalhesPedido(2);
+CALL ObterDetalhesPedido(3);
+
+
 
 
