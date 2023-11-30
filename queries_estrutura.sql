@@ -380,5 +380,16 @@ END //
 DELIMITER ; 
 
 
+-- quetão 1
+SELECT P.nome_pastel
+FROM Pasteis P
+JOIN Categorias C ON P.categoria_id = C.categoria_id
+JOIN Tamanhos T ON P.tamanho_id = T.tamanho_id
+JOIN Detalhes_Pedido DP ON P.pastel_id = DP.pastel_id
+JOIN Pedidos PE ON DP.pedido_id = PE.pedido_id
+JOIN Clientes Cl ON PE.cliente_id = Cl.cliente_id
+WHERE C.nome_categoria = 'Vegano'
+    AND Cl.data_nascimento <= CURDATE() - INTERVAL 18 YEAR;
+    
 
 
