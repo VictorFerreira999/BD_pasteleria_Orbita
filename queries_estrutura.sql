@@ -180,5 +180,152 @@ CALL ObterDetalhesPedido(2);
 CALL ObterDetalhesPedido(3);
 
 
+DELIMITER //
+
+CREATE PROCEDURE AdicionarCliente(
+    IN p_nome_completo VARCHAR(100),
+    IN p_nome_preferido VARCHAR(50),
+    IN p_cpf VARCHAR(14),
+    IN p_data_nascimento DATE,
+    IN p_telefone VARCHAR(20),
+    IN p_email VARCHAR(100),
+    IN p_bairro VARCHAR(50),
+    IN p_cidade VARCHAR(50),
+    IN p_estado VARCHAR(2)
+)
+BEGIN
+    INSERT INTO Clientes (
+        nome_completo, nome_preferido, cpf, data_nascimento, 
+        telefone, email, bairro, cidade, estado
+    ) VALUES (
+        p_nome_completo, p_nome_preferido, p_cpf, p_data_nascimento, 
+        p_telefone, p_email, p_bairro, p_cidade, p_estado
+    );
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE PROCEDURE FazerPedido(
+    IN p_cliente_id INT,
+    IN p_data_pedido DATE,
+    IN p_forma_pagamento VARCHAR(50),
+    IN p_categoria_id INT,
+    IN p_pastel_id INT,
+    IN p_quantidade INT
+)
+BEGIN
+    DECLARE v_pedido_id INT;
+
+
+    INSERT INTO Pedidos (cliente_id, data_pedido, forma_pagamento, categoria_id)
+    VALUES (p_cliente_id, p_data_pedido, p_forma_pagamento, p_categoria_id);
+
+    SET v_pedido_id = LAST_INSERT_ID();
+
+    INSERT INTO Detalhes_Pedido (pedido_id, pastel_id, quantidade)
+    VALUES (v_pedido_id, p_pastel_id, p_quantidade);
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE PROCEDURE ObterDetalhesPedido(
+    IN p_pedido_id INT
+)
+BEGIN
+    SELECT
+        D.detalhe_id,
+        D.pedido_id,
+        D.pastel_id,
+        D.quantidade,
+        P.nome_pastel,
+        P.preco,
+        C.nome_categoria
+    FROM
+        Detalhes_Pedido D
+    JOIN
+        Pasteis P ON D.pastel_id = P.pastel_id
+    JOIN
+        Categorias C ON P.categoria_id = C.categoria_id
+    WHERE
+        D.pedido_id = p_pedido_id;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER AtualizarPrecoTotalPedido
+AFTER INSERT ON Detalhes_Pedido
+FOR EACH ROW
+BEGIN
+    DECLARE total DECIMAL(10, 2);
+
+    SELECT COALESCE(SUM(P.preco * DP.quantidade), 0.00)
+    INTO total
+    FROM Detalhes_Pedido DP
+    JOIN Pasteis P ON DP.pastel_id = P.pastel_id
+    WHERE DP.pedido_id = NEW.pedido_id;
+
+    UPDATE Pedidos
+    SET preco_total = total
+    WHERE pedido_id = NEW.pedido_id;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER AtualizarQuantidadePedidosCliente
+AFTER INSERT ON Pedidos
+FOR EACH ROW
+BEGIN
+    UPDATE Clientes
+    SET quantidade_pedidos = quantidade_pedidos + 1
+    WHERE cliente_id = NEW.cliente_id;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER AtualizarQuantidadePasteisVendidos
+AFTER INSERT ON Detalhes_Pedido
+FOR EACH ROW
+BEGIN
+    UPDATE Categorias
+    SET quantidade_pasteis_vendidos = quantidade_pasteis_vendidos + NEW.quantidade
+    WHERE categoria_id = (SELECT categoria_id FROM Pasteis WHERE pastel_id = NEW.pastel_id);
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER LimparDetalhesPedidosExpirados
+AFTER DELETE ON Pedidos
+FOR EACH ROW
+BEGIN
+    DELETE FROM Detalhes_Pedido
+    WHERE pedido_id = OLD.pedido_id;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER AtualizarTotalPasteisEstoque
+AFTER INSERT ON Detalhes_Pedido
+FOR EACH ROW
+BEGIN
+    UPDATE Pasteis
+    SET quantidade_estoque = quantidade_estoque - NEW.quantidade
+    WHERE pastel_id = NEW.pastel_id;
+END //
+
+DELIMITER ;
 
 
