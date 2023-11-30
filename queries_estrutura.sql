@@ -391,5 +391,7 @@ JOIN Clientes Cl ON PE.cliente_id = Cl.cliente_id
 WHERE C.nome_categoria = 'Vegano'
     AND Cl.data_nascimento <= CURDATE() - INTERVAL 18 YEAR;
     
-
+  -- questão 4  
+SELECT SUM(P.preco) AS ValorTotalVendas
+FROM Pasteis P;
 
