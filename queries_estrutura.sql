@@ -395,3 +395,11 @@ WHERE C.nome_categoria = 'Vegano'
 SELECT SUM(P.preco) AS ValorTotalVendas
 FROM Pasteis P;
 
+
+-- questão 5
+SELECT DISTINCT PE.pedido_id
+FROM Pedidos PE
+JOIN Detalhes_Pedido DP ON PE.pedido_id = DP.pedido_id
+JOIN Pasteis P ON DP.pastel_id = P.pastel_id
+JOIN Detalhes_Pedido_Bebida DPB ON PE.pedido_id = DPB.pedido_id
+JOIN Bebidas B ON DPB.bebida_id = B.bebida_id;
