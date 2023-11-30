@@ -180,6 +180,7 @@ CALL ObterDetalhesPedido(2);
 CALL ObterDetalhesPedido(3);
 
 
+
 DELIMITER //
 
 CREATE PROCEDURE AdicionarCliente(
