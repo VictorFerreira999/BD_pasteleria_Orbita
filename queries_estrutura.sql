@@ -168,18 +168,83 @@ VALUES
     ('Suco de Laranja 500ml', 5.00, 2),
     ('Água 1L', 4.00, 3);
 
-CALL FazerPedido(1, '2023-11-30', 'Cartão de Crédito', 1, 1, 1);
-CALL FazerPedido(1, '2023-11-29', 'Dinheiro', 1, 2, 2);
+-- -------------
 
-CALL FazerPedido(2, '2023-11-28', 'Cartão de Débito', 1, 2, 1);
+-- quetão 1
+SELECT P.nome_pastel
+FROM Pasteis P
+JOIN Categorias C ON P.categoria_id = C.categoria_id
+JOIN Tamanhos T ON P.tamanho_id = T.tamanho_id
+JOIN Detalhes_Pedido DP ON P.pastel_id = DP.pastel_id
+JOIN Pedidos PE ON DP.pedido_id = PE.pedido_id
+JOIN Clientes Cl ON PE.cliente_id = Cl.cliente_id
+WHERE C.nome_categoria = 'Vegano'
+    AND Cl.data_nascimento <= CURDATE() - INTERVAL 18 YEAR;
+-- questao 2
+SELECT
+    YEAR(data_pedido) as ano,
+    MONTH(data_pedido) as mes,
+    c.cliente_id,
+    c.nome_completo,
+    COUNT(p.pedido_id) as quantidade_pedidos
+FROM
+    Pedidos p
+JOIN
+    Clientes c ON p.cliente_id = c.cliente_id
+WHERE
+    YEAR(data_pedido) = YEAR(CURDATE())
+GROUP BY
+    ano, mes, c.cliente_id
+ORDER BY
+    ano DESC, mes DESC, quantidade_pedidos DESC;
 
-CALL FazerPedido(3, '2023-11-27', 'Dinheiro', 4, 4, 1);
+-- questao 3
 
-CALL ObterDetalhesPedido(1);
-CALL ObterDetalhesPedido(2);
-CALL ObterDetalhesPedido(3);
+SELECT P.nome_pastel
+FROM Pasteis P
+JOIN Pasteis_Recheios PR1 ON P.pastel_id = PR1.pastel_id
+JOIN Recheios R1 ON PR1.recheio_id = R1.recheio_id AND R1.nome_recheio = 'Bacon'
+JOIN Pasteis_Recheios PR2 ON P.pastel_id = PR2.pastel_id
+JOIN Recheios R2 ON PR2.recheio_id = R2.recheio_id AND R2.nome_recheio = 'Queijo';
 
 
+SELECT
+    YEAR(data_pedido) as ano,
+    MONTH(data_pedido) as mes,
+    c.cliente_id,
+    c.nome_completo,
+    COUNT(p.pedido_id) as quantidade_pedidos
+FROM
+    Pedidos p
+JOIN
+    Clientes c ON p.cliente_id = c.cliente_id
+WHERE
+    YEAR(data_pedido) = YEAR(CURDATE())
+GROUP BY
+    ano, mes, c.cliente_id
+ORDER BY
+    ano DESC, mes DESC, quantidade_pedidos DESC;
+    
+  -- questão 4  
+SELECT SUM(P.preco) AS ValorTotalVendas
+FROM Pasteis P;
+
+-- questão 5
+SELECT DISTINCT PE.pedido_id
+FROM Pedidos PE
+JOIN Detalhes_Pedido DP ON PE.pedido_id = DP.pedido_id
+JOIN Pasteis P ON DP.pastel_id = P.pastel_id
+JOIN Detalhes_Pedido_Bebida DPB ON PE.pedido_id = DPB.pedido_id
+JOIN Bebidas B ON DPB.bebida_id = B.bebida_id;
+
+-- questao 6
+SELECT P.nome_pastel, COALESCE(SUM(DP.quantidade), 0) as quantidade_vendas
+FROM Pasteis P
+LEFT JOIN Detalhes_Pedido DP ON P.pastel_id = DP.pastel_id
+GROUP BY P.pastel_id
+ORDER BY quantidade_vendas ASC;
+
+-- questao 7
 
 DELIMITER //
 
@@ -219,7 +284,6 @@ CREATE PROCEDURE FazerPedido(
 BEGIN
     DECLARE v_pedido_id INT;
 
-
     INSERT INTO Pedidos (cliente_id, data_pedido, forma_pagamento, categoria_id)
     VALUES (p_cliente_id, p_data_pedido, p_forma_pagamento, p_categoria_id);
 
@@ -230,6 +294,7 @@ BEGIN
 END //
 
 DELIMITER ;
+
 
 DELIMITER //
 
@@ -256,6 +321,8 @@ BEGIN
 END //
 
 DELIMITER ;
+
+-- questao 8
 
 DELIMITER //
 
@@ -329,8 +396,8 @@ END //
 
 DELIMITER ;
 
+-- questao 9 
 DELIMITER //
-
 CREATE FUNCTION ObterNomeCliente(cliente_id INT) RETURNS VARCHAR(100) DETERMINISTIC
 BEGIN
     DECLARE nome_cliente VARCHAR(100);
@@ -379,27 +446,57 @@ END //
 
 DELIMITER ; 
 
+-- questao 10 
 
--- quetão 1
-SELECT P.nome_pastel
-FROM Pasteis P
-JOIN Categorias C ON P.categoria_id = C.categoria_id
-JOIN Tamanhos T ON P.tamanho_id = T.tamanho_id
-JOIN Detalhes_Pedido DP ON P.pastel_id = DP.pastel_id
-JOIN Pedidos PE ON DP.pedido_id = PE.pedido_id
-JOIN Clientes Cl ON PE.cliente_id = Cl.cliente_id
-WHERE C.nome_categoria = 'Vegano'
-    AND Cl.data_nascimento <= CURDATE() - INTERVAL 18 YEAR;
-    
-  -- questão 4  
-SELECT SUM(P.preco) AS ValorTotalVendas
-FROM Pasteis P;
+CREATE VIEW ViewClientesDetalhesContato AS
+SELECT c.*, cc.tipo_contato, cc.valor_contato
+FROM Clientes c
+LEFT JOIN Contatos_Cliente cc ON c.cliente_id = cc.cliente_id;
 
+CREATE VIEW ViewPasteisDetalhes AS
+SELECT p.*, t.nome_tamanho, c.nome_categoria
+FROM Pasteis p
+LEFT JOIN Tamanhos t ON p.tamanho_id = t.tamanho_id
+LEFT JOIN Categorias c ON p.categoria_id = c.categoria_id;
 
--- questão 5
-SELECT DISTINCT PE.pedido_id
-FROM Pedidos PE
-JOIN Detalhes_Pedido DP ON PE.pedido_id = DP.pedido_id
-JOIN Pasteis P ON DP.pastel_id = P.pastel_id
-JOIN Detalhes_Pedido_Bebida DPB ON PE.pedido_id = DPB.pedido_id
-JOIN Bebidas B ON DPB.bebida_id = B.bebida_id;
+CREATE VIEW ViewDetalhesPedidosClientes AS
+SELECT dp.*, p.nome_pastel, pe.data_pedido, c.nome_completo as nome_cliente
+FROM Detalhes_Pedido dp
+JOIN Pasteis p ON dp.pastel_id = p.pastel_id
+JOIN Pedidos pe ON dp.pedido_id = pe.pedido_id
+JOIN Clientes c ON pe.cliente_id = c.cliente_id;
+
+CREATE VIEW ViewPasteisVendidosCategoria AS
+SELECT c.nome_categoria, COALESCE(SUM(dp.quantidade), 0) as quantidade_vendida
+FROM Categorias c
+LEFT JOIN Pasteis p ON c.categoria_id = p.categoria_id
+LEFT JOIN Detalhes_Pedido dp ON p.pastel_id = dp.pastel_id
+GROUP BY c.categoria_id;
+
+CREATE VIEW ViewBebidasVendidasTamanho AS
+SELECT t.nome_tamanho, COALESCE(SUM(dp.quantidade), 0) as quantidade_vendida
+FROM Tamanhos t
+LEFT JOIN Bebidas b ON t.tamanho_id = b.tamanho_id
+LEFT JOIN Detalhes_Pedido_Bebida dp ON b.bebida_id = dp.bebida_id
+GROUP BY t.tamanho_id;
+
+CREATE VIEW ViewPedidosFormaPagamento AS
+SELECT forma_pagamento, COUNT(*) as quantidade_pedidos
+FROM Pedidos
+GROUP BY forma_pagamento;
+
+CREATE VIEW ViewRecheios AS
+SELECT *
+FROM Recheios;
+
+CREATE VIEW ViewBebidasPrecoTotalVendido AS
+SELECT b.*, COALESCE(SUM(dp.quantidade * b.preco), 0.00) as preco_total_vendido
+FROM Bebidas b
+LEFT JOIN Detalhes_Pedido_Bebida dp ON b.bebida_id = dp.bebida_id
+GROUP BY b.bebida_id;
+
+CREATE VIEW ViewClientesQuantidadePedidos AS
+SELECT c.*, COALESCE(COUNT(p.pedido_id), 0) as quantidade_pedidos
+FROM Clientes c
+LEFT JOIN Pedidos p ON c.cliente_id = p.cliente_id
+GROUP BY c.cliente_id;
