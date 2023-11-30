@@ -376,6 +376,8 @@ BEGIN
     RETURN total;
 END //
 
-DELIMITER ;
+DELIMITER ; 
+
+
 
 
